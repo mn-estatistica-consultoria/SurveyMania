@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="fr" ng-app="surveyManiaApp" id="app-container">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>SurveyMania</title>
+        <link href="bower_components/bootstrap/dist/css/bootstrap.css" rel="stylesheet" type="text/css">
+        <link href="css/font-awesome/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+        <link href="bower_components/datatables-plugins/integration/bootstrap/3/dataTables.bootstrap.css" rel="stylesheet" type="text/css">
+        <link href="bower_components/datatables-responsive/css/dataTables.responsive.css" rel="stylesheet" type="text/css">
+        <link href="css/global.css" rel="stylesheet" type="text/css">
+        <link href="css/style.css" rel="stylesheet" type="text/css">
+        <link href="css/circle.css" rel="stylesheet" type="text/css">
+        <link href="css/scroll_style.css" rel="stylesheet" type="text/css">
+        <link href="css/animate.min.css" rel="stylesheet" type="text/css">
+        <link href="js/vis/vis.min.css" rel="stylesheet" type="text/css">
+        <link href="css/homepage.css" rel="stylesheet" type="text/css">
+        <script type="text/javascript">
+          var surveyManiaURL = 'http://localhost:1337';
+        </script>
+        <script src="http://crypto-js.googlecode.com/svn/tags/3.1.2/build/rollups/sha256.js"></script>
+        <script src="https://maps.googleapis.com/maps/api/js?v=3.exp&signed_in=true&libraries=places"></script>
+        <script src="js/google/google-address.js"></script>
+        <script type="text/javascript" src="https://www.google.com/jsapi"></script>
+        <script type="text/javascript" src="http://word-cumulus-goog-vis.googlecode.com/svn/trunk/wordcumulus.js"></script>
+        <script type="text/javascript" src="http://word-cumulus-goog-vis.googlecode.com/svn/trunk/swfobject.js"></script>
+        <script type="text/javascript">
+            google.load("visualization", "1.1", {packages:["corechart", "table"]});
+        </script>
+        <script src='https://www.google.com/recaptcha/api.js'></script>
+    </head>
+    <body ng-controller="GlobalController">
+        <div id="fb-root"></div>
+        <script>(function(d, s, id) {
+          var js, fjs = d.getElementsByTagName(s)[0];
+          if (d.getElementById(id)) return;
+          js = d.createElement(s); js.id = id;
+          js.src = "//connect.facebook.net/en_US/sdk.js#xfbml=1&version=v2.5&appId=749545525092512";
+          fjs.parentNode.insertBefore(js, fjs);
+        }(document, 'script', 'facebook-jssdk'));</script>
+
+        <div id="wrapper">
+            <div id="page-wrapper" class="view-container">
+                <header>
+                    <a href="/#/home"><span class="brand">SurveyMania</span></a>
+                    <div id="mainMenu" style="padding-top: 5px;">
+                        <ul class="nav nav-pills" style="width: 700px; float:left; margin-left: 10%;">
+                            <li role="presentation" ng-class="{active:(navigationPart==='home')}"><a href="/#/home">Accueil</a></li>
+                            <li role="presentation" ng-show="isLogged" ng-class="{active:(navigationPart==='account')}"><a href="/#/account">Mon compte</a></li>
+                            <li role="presentation" ng-show="isAdmin" ng-class="{active:(navigationPart==='account/admin/validate/pro')}"><a href="/#/account/admin/validate/pro">Valider pros</a></li>
+                            <li role="presentation" ng-show="isCustomer" ng-class="{active:(navigationPart==='mysurveys')}"><a href="/#/mysurveys">Mes sondages</a></li>
+                            <li role="presentation" ng-show="isOrganization" ng-class="{active:(navigationPart==='organizationPanel')}"><a href="/#/organizationPanel">Administration</a></li>
+                            <!--<li role="presentation" ng-show="isOrganization" ng-class="{active:(navigationPart==='account/pro/shop-admins')}"><a href="/#/account/pro/shop-admins">Administrateurs</a></li>-->
+                            <li role="presentation" ng-show="isOrganization" ng-class="{active:(navigationPart==='createSurvey')}"><a href="/#/createSurvey">Créer un sondage</a></li>
+                            <li role="presentation" ng-show="isCustomer" ng-class="{active:(navigationPart==='games')}"><a href="/#/games">Mini-jeux</a></li>
+                            <li role="presentation" ng-class="{active:(navigationPart==='ranking')}"><a href="/#/ranking">Classement</a></li>
+                        </ul>
+                        <div style="float: right; margin-right: 10px; margin-top:5px;">
+                            <button id="logoutBtn" ng-show="isLogged" ng-click="logout()" class="btn btn-default">Logout</button>
+                            <button ng-hide="isLogged" type="button" class="btn btn-primary" data-toggle="modal" data-target="#myModal2">S'identifier</button> 
+                            <button ng-hide="isLogged" type="button" class="btn btn-primary" data-toggle="modal" data-target="#myModal">S'inscrire</button>
+                        </div>
+                    </div>
+                </header>
+                <div id="bubble-infos" class="ui-widget-content" hidden>
+                <i class="fa fa-times bubble-infos-remove" ng-click="hideInfosBulle()"></i>
+                <blockquote class="oval-quotes">
+                    <p><strong>Astuce</strong><br>Vous n'avez pas de filleuls. Parrainez des utilisateurs afin de gagner des points !</p>
+                </blockquote>
+                </div>
+
+                <div ng-include="'/login'"></div>
+                <div ng-include="'/signup'"></div>
+                <div ng-view id="view-container" class="view-frame"></div>
+            </div>
+        </div>
+        <script src="bower_components/jquery/jquery.js"></script> 
+        <script src="js/jquery-ui.min.js"></script>
+        <script src="bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+        <script src="js/phaser/phaser.min.js"></script>
+        <script src="js/wow.min.js"></script>
+        <script src="bower_components/angular/angular.min.js"></script>
+        <script src="bower_components/angular-i18n/angular-locale_fr-fr.js"></script>
+        <script src="bower_components/angular-animate/angular-animate.min.js"></script>
+        <script src="bower_components/angular-route/angular-route.min.js"></script>
+        <script src="bower_components/angular-sanitize/angular-sanitize.min.js"></script>
+        <script src="bower_components/angular-resource/angular-resource.min.js"></script>
+        <script src="bower_components/angular-dragdrop/src/angular-dragdrop.js"></script>
+        <script src="bower_components/datatables/media/js/jquery.dataTables.min.js"></script>
+        <script src="bower_components/datatables-plugins/integration/bootstrap/3/dataTables.bootstrap.min.js"></script>
+        <!-- <script src="js/angular-recaptcha.min.js"></script> -->
+        <script src="js/vis/vis.min.js"></script>
+        <script src="js/bouncejs/bounce.min.js"></script>
+        <script src="js/countUp/countUp.min.js"></script>
+        <script src="js/config.js"></script>
+        <script src="js/services.js"></script>
+        <script src="js/filters.js"></script>
+        <script src="js/controllers/controllers.js"></script>
+        <script src="js/app.js"></script>
+        <script src="js/global.js"></script>
+    </body>
+</html>

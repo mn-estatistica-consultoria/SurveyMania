@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<div ng-controller="DragAndDrop">
+  <!--<div class="row" data-ng-repeat="htmlsub in questionList">
+    <div class="col" data-ng-repeat="c in htmlsub">{{c}}</div>
+    <span>------------------------</span>
+  </div>
+  =======================================================
+  <div class="row" data-ng-repeat="htmlsub1 in htmlList">
+    <div class="col" data-ng-repeat="c1 in htmlsub1">{{c1}}</div>
+    <span>------------------------</span>
+  </div>-->
+
+  <div class="col-md-2">
+    <h3>Créer un sondage </h3>
+    <input ng-model="survey.name" type="text" name="name" placeholder="Entrez le nom du sondage" class="form-control" required="required"/><br>
+    <input ng-model="survey.points" type="number" name="surveypoints" placeholder="Entrez le nombre de points" class="form-control" required="required"/><br>
+    <textarea ng-model="survey.instructions" name="surveyinstructions" class="form-control" placeholder="Indiquez les instructions..."></textarea>
+    <textarea ng-model="survey.description" name="surveydescription" class="form-control" placeholder="Indiquez la description du sondage..."></textarea>
+    <select id="survey-categories" ng-model="survey.category" class="form-control">
+     <option ng-repeat="category in categories" value="{{category.category_id}}" >{{category.name}}</option>
+   </select><br>
+ </div>
+  <div>
+    <div class="col-md-4" id="tool_panel">
+      <div class="col-sm-12 draganddroptuto">
+        <i class="fa fa-arrows faarrows"></i> Cliquez/déposez les items que vous souhaitez inclure dans le sondage
+      </div>
+      <h3 class="ui-widget-header">Outils</h3>
+      <div class="panel panel-default">
+        <div class="panel-heading">
+          Type de question <i class="fa fa-sort-desc"></i>
+        </div>
+        <div class="panel-body">
+         <ul  style="padding: 0!important">
+           <li class="draggable_item dragitem col-xs-5 col-sm-5 col-md-5" ng-repeat='item in list1' ng-show="item.title" data-drag="true" data-jqyoui-options="{revert: 'invalid', helper: 'clone'}" ng-model="list1" jqyoui-draggable="{index: {{$index}}, animate: true, placeholder: 'keep', deepCopy: true}">
+            <i class="fa fa-{{item.icon}}" style="margin-right:5px;"></i> {{item.title}} <i class="fa fa-ellipsis-v draggable-icon"></i>
+            </li>
+         </ul> 
+        </div>
+      </div>
+      <div class="panel panel-default">
+        <div class="panel-heading">
+          Options <i class="fa fa-gears"></i>
+        </div>
+        <div id="display-item-options" class="panel-body" style="display:none;">
+        </div>
+      </div>
+      <div id="media_panel_container"></div>
+    </div> 
+    <div class="col-md-6" id="renderPanel">
+      <div id="optionsbar" class="col-sm-12">
+        <button class="optionsbarButton" ng-click="validateSurvey()"><i class="fa fa-save"> Enregistrer</i></button>
+        <button class="optionsbarButton" ng-click="previsualiserSurvey()"><i class="fa fa-search"> Prévisualiser</i></button>
+        <button class="optionsbarButton"><i class="fa fa-plus-square-o addSection"> Ajouter une section</i></button>
+      </div>
+      <h3 class="ui-widget-header">Création du sondage</h3>
+      <ul class="nav nav-tabs" role="tablist" id="myTab">
+        <li role="presentation" class="active"><a href='' id="tab1" selectlist="list1" list="1" role="tab" data-toggle="tab">Section 1</a></li>
+      </ul>
+      <div class="tab-content">
+        <div role="tabpanel" class="tab-pane active" id="upload_tab">
+          <div class="ui-widget-content">
+            <ol class="dropzone" data-drop="true" ng-model='displayedList' jqyoui-droppable="{multiple:true}" id="list4" style="padding-bottom:50px;">
+              <li class="drop_item" ng-repeat="itemlol in displayedList" data-drag="true" data-jqyoui-options="{revert: 'invalid', helper: 'clone'}" ng-model="displayedList" jqyoui-draggable="{index: {{$index+(currentListNumber*100)}},animate:false}">
+                <!-- Champ pour modifier la question -->
+                <input ng-hide="itemlol.show" type="text" class="answer_field" ng-model="answer"/>
+                <!-- Label de la question -->
+                <span class="question_label" ng-show="itemlol.show" ng-bind-html="itemlol.label"></span>
+                <!-- Code de la question (type de question) -->
+                <span id="itemn{{$index+(currentListNumber*100)}}" ng-hide="itemlol.title == 'Titre' || itemlol.title == 'Texte libre'" class="question_code" ng-bind-html="itemlol.code"></span>
+
+                <!-- Bouton pour valider la modification -->
+                <span ng-hide="itemlol.show" ng-click="validate($index+(currentListNumber*100), answer)" class="validate_edit_btn"></span>
+                <!-- Bouton pour modifier la question-->
+                <span ng-show="itemlol.show" ng-click="edit($index+(currentListNumber*100), itemlol.id)" class="edit_btn"></span>
+                <!-- Bouton pour ajouter un média-->
+                <i ng-show="itemlol.show" ng-click="addMedia($index+(currentListNumber*100))" class="fa add_media fa-file-image-o"></i>
+                <!-- Bouton pour supprimer la question -->
+                <span class="delete_btn" ng-click="delete($index+(currentListNumber*100))"></span>
+              </li>
+              <li class="placeholder" ng-hide="hideMe()">Cliquez/déposez des éléments depuis le menu pour créer votre sondage</li>
+            </ol>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script type="text/javascript">
+
+$(document).on('click', '#validateMedia', function(event) {
+    event.preventDefault();
+    var urlyt = $(this).parent().children("input[name='videoUrl']").val();
+    var urlimg = $(this).parent().children("input[name='imageUrl']").val();
+    var idItem = $(this).parent().children("input[name='itemIndex']").val();
+
+    if(urlyt != '')
+    {
+      var video_id = urlyt.split('v=')[1];
+      var amp = video_id.indexOf('&');
+      if(amp != -1)
+        video_id = video_id.substring(0, amp);
+      var finalurl = "http://youtube.com/embed/"+video_id;
+
+      var desc = $(this).parent().children("input[name='videoDescription']").val();
+
+      $('#renderPanel').scope().addVideo(idItem, {'description':desc, 'url':finalurl});
+      console.log($("#itemn"+idItem));
+      $("#itemn"+idItem).after('<iframe style="clear:both;" id="ytplayer" type="text/html" width="640" height="390" src="'+finalurl+'" frameborder="0"/><div>'+desc+'</div>').hide().fadeIn(2000);
+    }
+    if(urlimg != '')
+    {
+      var idesc = $(this).parent().children("input[name='videoDescription']").val();
+
+      $('#renderPanel').scope().addImage(idItem, {'description':idesc, 'url':urlimg});
+
+      $("#itemn"+idItem).after('<img src="'+urlimg+'" /><div>'+idesc+'</div>').hide().fadeIn(2000);
+    }
+});
+
+$(document).on('dblclick', '#myTab a', function(event)
+{
+  event.preventDefault();
+  $(this).parent().append("<div id='editSectionName'><input class='form-control' name='newSectionName' value='"+$(this).html()+"' /><i id='validNewSectionName' class='fa add_media fa-check'></i></div>");
+  $(this).hide();
+});
+
+$(document).on('click', '#validNewSectionName', function(event)
+{
+  var newSectionName = $(this).parent().children("input[name='newSectionName']").val();
+  var listId = $(this).parent().parent().children("a").attr("list");
+  console.log(listId);
+
+  $(this).parent().parent().children("a").html(newSectionName);
+  $(this).parent().parent().children("a").show();
+  $("#editSectionName").remove();
+
+  $('#renderPanel').scope().changeSectionName(parseInt(listId) - 1, newSectionName);
+});
+
+$(document).on('click', '#myTab a', function(event)
+{
+  event.preventDefault();
+  $('#renderPanel').scope().switchList($(this).attr("list"));
+});
+
+$(document).on('click', '.addSection', function(event)
+{
+  var pos = $('#myTab').find('a').last().attr('list');
+  $('#myTab').append('<li role="presentation"><a id="tab'+(parseInt(pos)+1)+'" selectlist="list'+(parseInt(pos)+1)+'" list="'+(parseInt(pos)+1)+'" role="tab" data-toggle="tab">Section '+(parseInt(pos)+1)+'</a></li>');
+  $('#renderPanel').scope().addSection();
+});
+
+$(document).on('click', '.removeItem', function(event)
+{
+  event.preventDefault();
+  $(this).parent().find('input').prop('disabled', true);
+});
+
+$(document).on('click', '#addNewOptions', function(event)
+{
+  event.preventDefault();
+  $('#newOptions').append('<input class="form-control" type="text" value="" />');
+});
+
+$(document).on('click', '#addNewSectionOptions', function(event)
+{
+  event.preventDefault();
+  var str = [];
+  str.push('<div pos>');
+  str.push('<input class="form-control" style="display:inline-block; width:45%;" type="text" />');
+  str.push('<select class="form-control" style="display:inline-block; width:45%;" >');
+  for (var i = 0; i < $('#renderPanel').scope().sectionList.length; i++)
+  {
+    str.push('<option value="'+i+'">'+$('#renderPanel').scope().sectionList[i].title+'</option>');
+  }
+  str.push('</select>');
+  str.push('<span class="removeItem fa fa-times"></span></div>');
+  $('#newSectionOptions').append(str.join(""));
+});
+
+
+$(document).on('click', '#closedQuestion', function(event) {
+    event.preventDefault(); 
+    var empty = false;
+    $(this).parent().find('input').each(function(index, element){
+      if(element.value == '')
+      {
+        empty = true;
+        $(this).parent().find('#errMessage').html("Le champ '"+$(this).parent().children("input[name='"+element.name+"']").prev().html()+"' doit être rempli").fadeIn(1000);
+      }
+    });
+
+    if (!empty)
+    {
+      var typeItem = $(this).parent().children("input[name='itemType']").val();
+      var idItem = $(this).parent().children("input[name='itemIndex']").val();
+
+      $("#itemn"+idItem).hide();
+
+      var newTitle = $(this).parent().children("input[name='questionTitle']").val();
+      if (typeItem == 0)
+        $("#itemn"+idItem).parent().find("h1").html(newTitle);
+      else if(typeItem == 7)
+      {
+        var newText = $(this).parent().children("textarea[name='questionTitle']").val();
+        console.log("ok 7 : "+newText);
+        $("#itemn"+idItem).parent().find("p").html(newText);
+      }
+      else
+        $("#itemn"+idItem).parent().find("h5").html(newTitle);
+
+      if (typeItem == 0)
+      {
+        $('#renderPanel').scope().editTitleQuestion(idItem, newTitle, typeItem);
+      }
+      if (typeItem == 1)
+      {
+        var maxlength = $(this).parent().children("input[name='maxlength']").val();
+        $("#itemn"+idItem).children("textarea").prop('maxlength', maxlength);
+        $('#renderPanel').scope().editOpenQuestion(idItem, newTitle, typeItem, maxlength);
+      }
+      if (typeItem == 2)
+      {
+        var newOpt1 = $(this).parent().children("input[name='opt1']").val();
+        var newOpt2 = $(this).parent().children("input[name='opt2']").val();
+        $("#itemn"+idItem).children(".opt1").html(newOpt1);
+        $("#itemn"+idItem).children(".opt2").html(newOpt2);
+
+        $('#renderPanel').scope().editYesNoQuestion(idItem, newTitle, newOpt1, newOpt2);
+      }
+      if (typeItem == 3)
+      {
+        var min = $(this).parent().children("input[name='min']").val();
+        var max = $(this).parent().children("input[name='max']").val();
+        var step = $(this).parent().children("input[name='step']").val();
+        $("#itemn"+idItem).children("input[type='range']").prop("min", min);
+        $("#itemn"+idItem).children("input[type='range']").prop("max", max);
+        $("#itemn"+idItem).children("input[type='range']").prop("step", step);
+
+        $('#renderPanel').scope().editSliderQuestion(idItem, newTitle, min, max, step);
+      }
+      if (typeItem == 4)
+      {
+        var multiple = false;
+        if($('#multipleAnswers').is(':checked'))
+        {
+          multiple = true;
+          $("#itemn"+idItem).find("select").prop("multiple", true);
+        }
+        else
+          $("#itemn"+idItem).find("select").prop("multiple", false);
+
+        var options = [];
+        var newOptionIndex = 0;
+
+        var allElements = $(this).parent().children("#allOptionsEdit").find('div[pos]');
+        $("#itemn"+idItem).find("select").empty();
+
+        allElements.each(function($index){
+          if ($(this).find('input').prop("disabled") != true)
+          {
+            newOptionIndex++;
+            var opt = $(this).find('input').val();
+            var selectedSectionId = $(this).find('select option:selected').val();
+            options.push({'title':opt, 'sectionId':selectedSectionId});
+
+            $("#itemn"+idItem).find("select").append('<option pos="'+newOptionIndex+'" value="'+selectedSectionId+'">'+opt+'</option>');
+          }
+        });
+
+        // Questions venant d'être add
+        var newOptions = $(this).parent().children("#newSectionOptions").find('div[pos]');
+        newOptions.each(function($index)
+        {
+          var opt = $(this).find('input').val();
+          var selectedSectionId = $(this).find('select option:selected').val();
+          options.push({'title':opt, 'sectionId':selectedSectionId});
+          $("#itemn"+idItem).find("select").append('<option pos="'+($index+newOptionIndex+1)+'" value="'+selectedSectionId+'">'+opt+'</option>');
+        });
+
+        $('#renderPanel').scope().editSectionQuestion(idItem, newTitle, options, multiple);
+      }
+      if(typeItem == 5)
+      {
+        var min = $(this).parent().children("input[name='min']").val();
+        var max = $(this).parent().children("input[name='max']").val();
+
+        $("#itemn"+idItem).children("input[type='number']").prop("min", min);
+        $("#itemn"+idItem).children("input[type='number']").prop("max", max);
+
+        $('#renderPanel').scope().editNumericQuestion(idItem, newTitle, min, max);
+      }
+      if(typeItem == 6)
+      {
+        var multiple = false;
+        if($('#multipleAnswers').is(':checked'))
+        {
+          multiple = true;
+          $("#itemn"+idItem).find("select").prop("multiple", true);
+        }
+        else
+          $("#itemn"+idItem).find("select").prop("multiple", false);
+          
+        var options = [];
+        var newOptionIndex = 0;
+
+        // Questions déjà présentes dans le formulaire
+        var newOptionsEdit = $(this).parent().children("#allOptionsEdit").find('input');
+        $("#itemn"+idItem).find("select").empty();
+        newOptionsEdit.each(function($index)
+        {
+          if ($(this).prop("disabled") != true)
+          {
+            newOptionIndex++;
+            $txt = $(this).val();
+            console.log($txt+" : "+newOptionIndex);
+            options.push($txt);
+            $("#itemn"+idItem).find("select").append('<option pos="'+newOptionIndex+'" value="'+(newOptionIndex+1)+'">'+$txt+'</option>');
+            //$("#itemn"+idItem).find("option").prop("pos", newOptionIndex).text($txt);
+          }
+        });
+
+        // Questions venant d'être add
+        var newOptions = $(this).parent().children("#newOptions").children();
+        newOptions.each(function($index)
+        {
+          $txt = $(this).val();
+          options.push($txt);
+          $("#itemn"+idItem).find("select").append('<option pos="'+($index+newOptionIndex+1)+'" value="'+($index+newOptionIndex+2)+'">'+$txt+'</option>');
+        });
+
+        $('#renderPanel').scope().editMultipleQuestion(idItem, newTitle, options, multiple);
+      }
+      if (typeItem == 7)
+      {
+        var newOpenQTitle = $(this).parent().children("textarea[name='questionTitle']").val();
+        $('#renderPanel').scope().editTextQuestion(idItem, newOpenQTitle);
+      }
+      $("#itemn"+idItem).fadeIn(1000);
+    }
+});
+</script>
